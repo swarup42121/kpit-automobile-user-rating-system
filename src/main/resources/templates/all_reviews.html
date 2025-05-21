@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>All Car Reviews</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a0f2c;
+      color: white;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #ffffff;
+    }
+
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 25px;
+    }
+
+    .car-card {
+      background: #121d3a;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.3s ease;
+    }
+
+    .car-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .car-image {
+      width: 120px;
+      height: 80px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      background-color: #fff;
+      padding: 8px;
+    }
+
+    .car-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #ffffff;
+      margin-bottom: 10px;
+    }
+
+    .review-box {
+      width: 100%;
+      height: 100px;
+      overflow-y: auto;
+      background-color: #0a153a;
+      padding: 10px;
+      border-radius: 10px;
+      color: #cfd8ff;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .review {
+      margin-bottom: 8px;
+      border-bottom: 1px solid #1a2a4f;
+      padding-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Top Rated Car Reviews</h1>
+
+  <div class="card-container" id="carReviewsContainer">
+    <!-- Dynamic car cards with reviews will be inserted here -->
+  </div>
+
+  <script>
+    async function fetchAndRenderCarReviews() {
+      try {
+        const response = await fetch('http://localhost:8080/api/reviews/all');
+        if (!response.ok) {
+          throw new Error('Failed to fetch car reviews');
+        }
+        const carsWithReviews = await response.json();
+        const container = document.getElementById('carReviewsContainer');
+        container.innerHTML = '';
+
+        carsWithReviews.forEach(carWithReviews => {
+          const car = carWithReviews.car;
+          const reviews = carWithReviews.reviews;
+
+          const card = document.createElement('div');
+          card.className = 'car-card';
+
+          const img = document.createElement('img');
+          img.className = 'car-image';
+          img.alt = car.name + ' Logo';
+
+          // Use imageUrl if present, else construct filename from car name
+          let imageFileName = car.imageUrl;
+          if (!imageFileName || imageFileName.trim() === '') {
+            imageFileName = car.name.replace(/\s+/g, '_') + '.jfif';
+          }
+          img.src = '/images/' + encodeURIComponent(imageFileName);
+
+          const nameDiv = document.createElement('div');
+          nameDiv.className = 'car-name';
+          nameDiv.textContent = car.name;
+
+          const reviewBox = document.createElement('div');
+          reviewBox.className = 'review-box';
+
+          if (reviews.length === 0) {
+            const noReview = document.createElement('div');
+            noReview.className = 'review';
+            noReview.textContent = 'No reviews yet.';
+            reviewBox.appendChild(noReview);
+          } else {
+            reviews.forEach(review => {
+              const reviewDiv = document.createElement('div');
+              reviewDiv.className = 'review';
+              const stars = '⭐️'.repeat(review.rating);
+              reviewDiv.textContent = stars + ' ' + review.content;
+              reviewBox.appendChild(reviewDiv);
+            });
+          }
+
+          card.appendChild(img);
+          card.appendChild(nameDiv);
+          card.appendChild(reviewBox);
+
+          container.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Error loading car reviews:', error);
+      }
+    }
+
+    // Fetch and render on page load
+    window.onload = fetchAndRenderCarReviews;
+  </script>
+</body>
+</html>
